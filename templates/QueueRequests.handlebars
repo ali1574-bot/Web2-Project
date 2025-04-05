@@ -1,0 +1,26 @@
+<h3 class="mb-4">Requests for {{requestType}}</h3>
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Student ID</th>
+      <th>Description</th>
+      <th>Status</th>
+      <th>Submitted On</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each requests}}
+      <tr>
+        <td>{{this.studentId}}</td>
+        <td>{{this.description}}</td>
+        <td>{{this.status}}</td>
+        <td>{{this.createdAt}}</td>
+        <td>
+          <a href="/admin/request/{{this._id}}" class="btn btn-primary btn-sm">View Details</a>
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>

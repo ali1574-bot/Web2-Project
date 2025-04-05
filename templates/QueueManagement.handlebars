@@ -1,0 +1,26 @@
+<h3 class="mb-4">Queue Management</h3>
+
+<a href="/admin/random-request" class="btn btn-warning mb-3">I Don’t Know Where to Begin!</a>
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Request Type</th>
+      <th>Queue Length</th>
+      <th>Estimated Completion</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each queueDetails}}
+      <tr>
+        <td>{{this.type}}</td>
+        <td>{{this.queueLength}}</td>
+        <td>{{this.estimatedCompletion}}</td>
+        <td>
+          <a href="/admin/queue/{{this.type}}" class="btn btn-primary btn-sm">View Requests</a>
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>
