@@ -1,0 +1,55 @@
+<h3 class="mb-4">Submit New Request</h3>
+
+<form id="requestForm" method="POST" action="/api/student/submit-request">
+  <div class="mb-3">
+    <label for="requestType" class="form-label">Request Type</label>
+    <select class="form-select" name="type" id="requestType" required>
+      <option value="">Select Type</option>
+      <option value="Transcript">Transcript</option>
+      <option value="Enrollment Letter">Enrollment Letter</option>
+      <option value="Grade Appeal">Grade Appeal</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="semester" class="form-label">Semester</label>
+    <select class="form-select" name="semester" id="semester" required>
+      <option value="">Select Semester</option>
+      <option value="Fall 2025">Fall 2025</option>
+      <option value="Spring 2025">Spring 2025</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="requestDesc" class="form-label">Description</label>
+    <textarea class="form-control" name="description" id="requestDesc" rows="4" required></textarea>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Submit Request</button>
+</form>
+
+<script>
+  document.getElementById("requestForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const data = {
+      type: formData.get("type"),
+      semester: formData.get("semester"),
+      description: formData.get("description")
+    };
+
+    fetch("/api/student/submit-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (res.ok) {
+        alert("Request submitted!");
+        window.location.href = "/student/my-requests";
+      } else {
+        alert("There was an error submitting your request.");
+      }
+    });
+  });
+</script>

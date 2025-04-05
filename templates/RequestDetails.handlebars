@@ -1,0 +1,25 @@
+<h3 class="mb-4">Request Details</h3>
+
+{{#if request}}
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Request Type: {{request.type}}</h5>
+    <p><strong>Student ID:</strong> {{request.studentId}}</p>
+    <p><strong>Description:</strong> {{request.description}}</p>
+    <p><strong>Status:</strong> {{request.status}}</p>
+    <p><strong>Submitted On:</strong> {{request.createdAt}}</p>
+    <p><strong>Estimated Completion:</strong> {{request.estimatedCompletion}}</p>
+  </div>
+</div>
+
+<form method="POST" action="/admin/request/{{request._id}}/resolve">
+  <div class="mb-3">
+    <label for="note" class="form-label">Add a Note</label>
+    <textarea class="form-control" id="note" name="note" rows="4" required></textarea>
+  </div>
+  <button type="submit" name="action" value="resolve" class="btn btn-success">Resolve</button>
+  <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
+</form>
+{{else}}
+<p>{{message}}</p>
+{{/if}}
