@@ -220,6 +220,7 @@ app.get('/student', async (req, res) => {
   let [email, phone] = await business.fetchUserContactDetails(username);
   let userId = await business.retrieveUserIdByUsername(username);
 
+  // Fetch notifications for the student
   let notifications = await business.fetchNotifications(username);
 
   res.render('ProfileView', {
@@ -228,7 +229,7 @@ app.get('/student', async (req, res) => {
     email: email,
     phone: phone,
     userId: userId,
-    notifications: notifications
+    notifications: notifications // Pass notifications to the template
   });
 });
 
@@ -610,12 +611,22 @@ app.post('/admin/request/:id/resolve', async (req, res) => {
   let { action, note } = req.body;
 
   try {
+    // Fetch the request details to get the type
+    let requestDetails = await business.fetchRequestById(requestId);
+
+    if (!requestDetails) {
+      res.redirect('/admin/queue-management'); // Redirect to queue management if request not found
+      return;
+    }
+
     if (action === "resolve") {
       await business.updateRequestStatus(requestId, "Resolved", note);
     } else if (action === "reject") {
       await business.updateRequestStatus(requestId, "Rejected", note);
     }
-    res.redirect(`/admin/queue/${req.body.type}`);
+
+    // Redirect to the queue page for the specific type
+    res.redirect(`/admin/queue/${requestDetails.type}`);
   } catch (error) {
     console.error("Error resolving/rejecting request:", error);
     res.status(500).send("Error resolving/rejecting request");
@@ -642,10 +653,8 @@ app.get('/admin/random-request', async (req, res) => {
   try {
     let randomRequest = await business.fetchRandomRequest();
     if (!randomRequest) {
-      res.render('RequestDetails', {
-        layout: 'admin_layout',
-        message: "No pending requests available."
-      });
+      // Redirect to the queue management page if no pending requests are available
+      res.redirect('/admin/queue-management');
       return;
     }
 

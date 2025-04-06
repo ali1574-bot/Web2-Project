@@ -438,7 +438,30 @@ async function fetchStudentRequestsBySemester(studentId, semester) {
  * @returns {Promise<void>}
  */
 async function cancelStudentRequest(requestId) {
+  // Update the request status to "Canceled"
   await persistence.updateRequestStatus(requestId, "Canceled");
+
+  // Fetch the request details to get the student ID and type
+  let requestDetails = await persistence.fetchRequestById(requestId);
+
+  // Save a notification for the student
+  let message = `Your request for "${requestDetails.type}" has been canceled.`;
+  await persistence.saveNotification(requestDetails.studentId, message);
+
+  // Fetch the student's email
+  let studentDetails = await persistence.fetchUserDetails(requestDetails.studentId);
+  let email = studentDetails.email;
+
+  // Prepare the email content
+  let subject = "Request Status Update";
+  let body = message;
+
+  // Send the email
+  try {
+    await emailService.sendEmail(email, subject, body);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
 }
 
 /**
@@ -449,6 +472,25 @@ async function cancelStudentRequest(requestId) {
  */
 async function addStudentRequest(request) {
   await persistence.addRequest(request);
+
+  // Save a notification for the student
+  let message = `Your request for "${request.type}" has been submitted successfully.`;
+  await persistence.saveNotification(request.studentId, message);
+
+  // Fetch the student's email
+  let studentDetails = await persistence.fetchUserDetails(request.studentId);
+  let email = studentDetails.email;
+
+  // Prepare the email content
+  let subject = "Request Status Update";
+  let body = `Your request for "${request.type}" has been submitted successfully.\nDescription: ${request.description}`;
+
+  // Send the email
+  try {
+    await emailService.sendEmail(email, subject, body);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
 }
 
 /**
@@ -540,14 +582,20 @@ async function updateRequestStatus(requestId, status, note) {
   let requestDetails = await persistence.fetchRequestById(requestId);
   let studentDetails = await persistence.fetchUserDetails(requestDetails.studentId);
 
-  // Send a notification to the student
+  // Save a notification for the student
+  let message = `Your request for "${requestDetails.type}" has been ${status.toLowerCase()}.\nNote: ${note}`;
+  await persistence.saveNotification(requestDetails.studentId, message);
+
+  // Send a notification email to the student
   let email = studentDetails.email;
-  let message = {
-    type: requestDetails.type,
-    status: status,
-    note: note
-  };
-  await sendNotification(email, message);
+  let subject = "Request Status Update";
+  let body = message;
+
+  try {
+    await emailService.sendEmail(email, subject, body);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
 }
 
 /**

@@ -48,12 +48,14 @@
                     <button class="btn btn-outline-primary" onclick="showEditPassword()">Reset Password</button>
                   </div>
                 </div>
-                <h3>Notifications</h3>
-                <ul id="notifications-list">
-                  {{#each notifications}}
-                    <li data-id="{{this._id}}">{{this.message}}</li>
-                  {{/each}}
-                </ul>
+                <div class="notifications">
+                  <h3>Notifications</h3>
+                  <ul id="notifications-list">
+                    {{#each notifications}}
+                      <li>{{this.message}} - {{this.createdAt}}</li>
+                    {{/each}}
+                  </ul>
+                </div>
                 <button id="delete-notifications-btn" class="btn btn-danger">Delete All Notifications</button>
               </div>
               <div id="edit-username" class="spa-page"></div>
