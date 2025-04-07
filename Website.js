@@ -36,41 +36,7 @@ app.get('/', (req, res) => {
   res.redirect('/login');
 });
 
-// Route to render about us page
-app.get('/aboutUs', (req, res) => {
-  let Link = "About Us";
-  res.render('AboutUs', {
-    Link: Link,
-    layout: 'home_layout'
-  });
-});
 
-// Route to render FAQs page
-app.get('/FAQS', (req, res) => {
-  let Link = "FAQS";
-  res.render('FAQS', {
-    Link: Link,
-    layout: 'home_layout'
-  });
-});
-
-// Route to render privacy policy page
-app.get('/privacyPolicy', (req, res) => {
-  let Link = "Privacy Policy";
-  res.render('PrivacyPolicy', {
-    Link: Link,
-    layout: 'home_layout'
-  });
-});
-
-// Route to render contact us page
-app.get('/contactUs', (req, res) => {
-  let Link = "Contact Us";
-  res.render('ContactUs', {
-    Link: Link,
-    layout: 'home_layout'
-  });
-});
 
 // Route to fetch all users
 app.get('/api/user', async (req, res) => {
@@ -320,8 +286,8 @@ app.get("/admin/profile", async (req, res) => {
   });
 });
 
-// Route to render admin user accounts page
-app.get("/admin/userAccounts", async (req, res) => {
+// Route to render admin Student accounts page
+app.get("/admin/UserAccounts", async (req, res) => {
   let sessionId = req.cookies.projectkey;
   let sessionData = await business.fetchSessionData(sessionId);
   let username = sessionData.data.username;

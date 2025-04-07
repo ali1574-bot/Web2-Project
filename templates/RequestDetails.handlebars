@@ -1,25 +1,146 @@
-<h3 class="mb-4">Request Details</h3>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-primary">
+            <i class="fas fa-file-alt me-2"></i>Request Details
+        </h3>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
 
-{{#if request}}
-<div class="card">
-  <div class="card-body">
-    <h5 class="card-title">Request Type: {{request.type}}</h5>
-    <p><strong>Student ID:</strong> {{request.studentId}}</p>
-    <p><strong>Description:</strong> {{request.description}}</p>
-    <p><strong>Status:</strong> {{request.status}}</p>
-    <p><strong>Submitted On:</strong> {{request.createdAt}}</p>
-    <p><strong>Estimated Completion:</strong> {{request.estimatedCompletion}}</p>
-  </div>
+    {{#if request}}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tag me-2 text-muted"></i>{{request.type}}
+                </h5>
+                <span class="badge status-badge {{request.status}}">
+                    {{request.status}}
+                </span>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Student ID</dt>
+                        <dd class="col-sm-8">{{request.studentId}}</dd>
+
+                        <dt class="col-sm-4">Submitted On</dt>
+                        <dd class="col-sm-8">
+                            <i class="fas fa-clock me-2 text-muted"></i>
+                            {{request.createdAt}}
+                        </dd>
+
+                        <dt class="col-sm-4">Est. Completion</dt>
+                        <dd class="col-sm-8">
+                            <i class="fas fa-hourglass-half me-2 text-muted"></i>
+                            {{request.estimatedCompletion}}
+                        </dd>
+                    </dl>
+                </div>
+                
+                <div class="col-md-6 mt-4 mt-md-0">
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-align-left me-2"></i>Description
+                        </h6>
+                        <p class="ps-4">{{request.description}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-comment-dots me-2 text-primary"></i>Resolution Actions
+            </h5>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/admin/request/{{request._id}}/resolve">
+                <div class="mb-4">
+                    <label for="note" class="form-label">
+                        <i class="fas fa-edit me-2"></i>Add Resolution Notes
+                    </label>
+                    <textarea class="form-control" 
+                              id="note" 
+                              name="note" 
+                              rows="4"
+                              placeholder="Enter detailed resolution notes..."
+                              required></textarea>
+                    <div class="form-text">Maximum 500 characters</div>
+                </div>
+                
+                <div class="d-flex gap-3 justify-content-end border-top pt-4">
+                    <button type="submit" 
+                            name="action" 
+                            value="reject"
+                            class="btn btn-danger btn-lg px-5">
+                        <i class="fas fa-times-circle me-2"></i>Reject
+                    </button>
+                    <button type="submit" 
+                            name="action" 
+                            value="resolve"
+                            class="btn btn-success btn-lg px-5">
+                        <i class="fas fa-check-circle me-2"></i>Resolve
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{else}}
+    <div class="alert alert-warning shadow-sm">
+        <i class="fas fa-exclamation-triangle me-2"></i>{{message}}
+    </div>
+    {{/if}}
 </div>
 
-<form method="POST" action="/admin/request/{{request._id}}/resolve">
-  <div class="mb-3">
-    <label for="note" class="form-label">Add a Note</label>
-    <textarea class="form-control" id="note" name="note" rows="4" required></textarea>
-  </div>
-  <button type="submit" name="action" value="resolve" class="btn btn-success">Resolve</button>
-  <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
-</form>
-{{else}}
-<p>{{message}}</p>
-{{/if}}
+<style>
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+}
+
+.status-badge.Pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.Resolved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.Rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+dl.row dt {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+dl.row dd {
+    font-weight: 400;
+    color: #212529;
+}
+
+.card {
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">

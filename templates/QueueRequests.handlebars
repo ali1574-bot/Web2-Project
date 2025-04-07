@@ -1,26 +1,101 @@
-<h3 class="mb-4">Requests for {{requestType}}</h3>
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white border-bottom-0 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="mb-0 text-primary">
+                <i class="fas fa-clipboard-list me-2"></i>Requests for {{requestType}}
+            </h3>
+            <span class="badge bg-primary-subtle text-primary py-2 px-3">
+                {{requests.length}} Total Requests
+            </span>
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light-primary">
+                    <tr>
+                        <th class="ps-4"><i class="fas fa-id-card me-2"></i>Student ID</th>
+                        <th><i class="fas fa-comment me-2"></i>Description</th>
+                        <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                        <th><i class="fas fa-calendar-day me-2"></i>Submitted On</th>
+                        <th class="pe-4"><i class="fas fa-edit me-2"></i>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each requests}}
+                    <tr class="hover-highlight">
+                        <td class="ps-4 fw-medium">{{this.studentId}}</td>
+                        <td class="text-truncate" style="max-width: 300px;">{{this.description}}</td>
+                        <td>
+                            <span class="badge rounded-pill status-{{this.status}}">
+                                {{this.status}}
+                            </span>
+                        </td>
+                        <td>
+                            <i class="fas fa-clock me-2 text-muted"></i>
+                            <span class="text-muted">{{this.createdAt}}</span>
+                        </td>
+                        <td class="pe-4">
+                            <a href="/admin/request/{{this._id}}" 
+                               class="btn btn-sm btn-outline-primary btn-pill">
+                               <i class="fas fa-eye me-2"></i>Details
+                            </a>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th>Student ID</th>
-      <th>Description</th>
-      <th>Status</th>
-      <th>Submitted On</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each requests}}
-      <tr>
-        <td>{{this.studentId}}</td>
-        <td>{{this.description}}</td>
-        <td>{{this.status}}</td>
-        <td>{{this.createdAt}}</td>
-        <td>
-          <a href="/admin/request/{{this._id}}" class="btn btn-primary btn-sm">View Details</a>
-        </td>
-      </tr>
-    {{/each}}
-  </tbody>
-</table>
+<style>
+.hover-highlight:hover {
+    background-color: #f8f9fa;
+    transform: translateX(3px);
+    transition: all 0.2s ease;
+}
+
+.bg-light-primary {
+    background-color: #f8f9fa;
+}
+
+.btn-pill {
+    border-radius: 20px;
+    padding: 0.35rem 1rem;
+}
+
+.status-Pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-Completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-In-Progress {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-Rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+    padding: 1rem;
+}
+
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">

@@ -30,8 +30,6 @@ The **Course Management System** is a web-based application designed to streamli
 - **Request Tracking**: Students can view the status of their submitted requests in real-time.
 - **Profile Management**: Students can update their personal details, such as email address and phone number, to keep their profiles up-to-date.
 - **Notifications**: Students receive notifications about the status of their requests or any required actions.
-- **FAQs and Help Section**: Provides students with answers to common questions and guidance on using the system.
-
 ---
 
 ## Project Structure

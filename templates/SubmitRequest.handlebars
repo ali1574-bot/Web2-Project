@@ -1,55 +1,147 @@
-<h3 class="mb-4">Submit New Request</h3>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Submit New Request</h3>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form id="requestForm" method="POST" action="/api/student/submit-request">
+                        <!-- Request Type Section -->
+                        <div class="mb-4">
+                            <label for="requestType" class="form-label fw-medium">
+                                <i class="fas fa-file-alt me-2"></i>Request Type
+                            </label>
+                            <select class="form-select form-select-lg" name="type" id="requestType" required>
+                                <option value="">Select Request Type</option>
+                                <option value="Transcript">Transcript Request</option>
+                                <option value="Enrollment Letter">Enrollment Letter</option>
+                                <option value="Grade Appeal">Grade Appeal</option>
+                            </select>
+                        </div>
 
-<form id="requestForm" method="POST" action="/api/student/submit-request">
-  <div class="mb-3">
-    <label for="requestType" class="form-label">Request Type</label>
-    <select class="form-select" name="type" id="requestType" required>
-      <option value="">Select Type</option>
-      <option value="Transcript">Transcript</option>
-      <option value="Enrollment Letter">Enrollment Letter</option>
-      <option value="Grade Appeal">Grade Appeal</option>
-    </select>
-  </div>
+                        <!-- Semester Selection -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="semester" class="form-label fw-medium">
+                                    <i class="fas fa-calendar-alt me-2"></i>Semester
+                                </label>
+                                <select class="form-select form-select-lg" name="semester" id="semester" required>
+                                    <option value="">Select Semester</option>
+                                    <option value="Fall 2025">Fall 2025</option>
+                                    <option value="Spring 2025">Spring 2025</option>
+                                </select>
+                            </div>
+                        </div>
 
-  <div class="mb-3">
-    <label for="semester" class="form-label">Semester</label>
-    <select class="form-select" name="semester" id="semester" required>
-      <option value="">Select Semester</option>
-      <option value="Fall 2025">Fall 2025</option>
-      <option value="Spring 2025">Spring 2025</option>
-    </select>
-  </div>
+                        <!-- Description Section -->
+                        <div class="mb-4">
+                            <label for="requestDesc" class="form-label fw-medium">
+                                <i class="fas fa-comment-dots me-2"></i>Request Details
+                            </label>
+                            <textarea class="form-control form-control-lg" 
+                                    name="description" 
+                                    id="requestDesc" 
+                                    rows="5"
+                                    placeholder="Please provide detailed information about your request..."
+                                    required></textarea>
+                        </div>
 
-  <div class="mb-3">
-    <label for="requestDesc" class="form-label">Description</label>
-    <textarea class="form-control" name="description" id="requestDesc" rows="4" required></textarea>
-  </div>
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-  <button type="submit" class="btn btn-primary">Submit Request</button>
-</form>
+<style>
+    .card {
+        border-radius: 15px;
+        transition: transform 0.3s ease;
+    }
+    
+    .form-select-lg, .form-control-lg {
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e9ecef;
+    }
+    
+    .form-select:focus, .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+    }
+    
+    .btn-lg {
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+</style>
+
+<!-- Required Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <script>
-  document.getElementById("requestForm").addEventListener("submit", function (e) {
+document.getElementById("requestForm").addEventListener("submit", function (e) {
     e.preventDefault();
+
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
 
     const formData = new FormData(this);
     const data = {
-      type: formData.get("type"),
-      semester: formData.get("semester"),
-      description: formData.get("description")
+        type: formData.get("type"),
+        semester: formData.get("semester"),
+        description: formData.get("description")
     };
 
     fetch("/api/student/submit-request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
     }).then(res => {
-      if (res.ok) {
-        alert("Request submitted!");
-        window.location.href = "/student/my-requests";
-      } else {
-        alert("There was an error submitting your request.");
-      }
+        if (res.ok) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Request Submitted!',
+                text: 'Your request has been successfully submitted',
+                confirmButtonText: 'View Requests'
+            }).then(() => {
+                window.location.href = "/student/my-requests";
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Failed',
+                text: 'There was an error submitting your request'
+            });
+        }
+    }).catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: 'Please check your internet connection'
+        });
+    }).finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Request';
     });
-  });
+});
 </script>
+
+<!-- Optional: Include SweetAlert for better alerts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

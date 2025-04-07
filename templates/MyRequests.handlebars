@@ -1,74 +1,201 @@
-<h3 class="mb-4">My Requests</h3>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-primary">
+            <i class="fas fa-file-alt me-2"></i>My Requests
+        </h3>
+        <div class="d-flex align-items-center gap-3">
+            <label class="form-label mb-0 text-muted"><i class="fas fa-filter me-2"></i>Filter:</label>
+            <select id="semesterFilter" class="form-select form-select-sm w-auto">
+                <option value="all">All Semesters</option>
+                {{#each semesters}}
+                    <option value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </div>
 
-<!-- Semester Filter Dropdown -->
-<select id="semesterFilter" class="form-select w-25 mb-3">
-  <option value="all">All Semesters</option>
-  {{#each semesters}}
-    <option value="{{this}}" {{#if (eq ../selectedSemester this)}}selected{{/if}}>{{this}}</option>
-  {{/each}}
-</select>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light-primary">
+                        <tr>
+                            <th class="ps-4">Type</th>
+                            <th>Semester</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Est. Completion</th>
+                            <th class="pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestTable">
+                        {{#each requests}}
+                        <tr class="hover-highlight">
+                            <td class="ps-4">{{this.type}}</td>
+                            <td>{{this.semester}}</td>
+                            <td class="text-truncate" style="max-width: 300px;">{{this.description}}</td>
+                            <td>
+                                <span class="status-badge status-{{this.status}}">
+                                    <i class="fas 
+                                        {{#if (eq this.status "Pending")}}fa-hourglass-half
+                                        {{else if (eq this.status "Resolved")}}fa-check-circle
+                                        {{else if (eq this.status "Rejected")}}fa-times-circle
+                                        {{else if (eq this.status "Completed")}}fa-flag-checkered
+                                        {{/if}}
+                                    "></i>
+                                    {{this.status}}
+                                </span>
+                            </td>
+                            <td>{{this.createdAt}}</td>
+                            <td>{{this.estimatedCompletion}}</td>
+                            <td class="pe-4">
+                                {{#if (eq this.status "Pending")}}
+                                <button class="btn btn-outline-danger btn-sm cancelBtn" data-id="{{this._id}}">
+                                    <i class="fas fa-ban me-2"></i>Cancel
+                                </button>
+                                {{else}}
+                                <span class="text-muted">—</span>
+                                {{/if}}
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                {{#unless requests.length}}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h5>No requests found</h5>
+                </div>
+                {{/unless}}
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- Requests Table -->
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Semester</th>
-      <th>Description</th>
-      <th>Status</th>
-      <th>Submitted On</th>
-      <th>Estimated Completion</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody id="requestTable">
-    {{#each requests}}
-      <tr>
-        <td>{{this.type}}</td>
-        <td>{{this.semester}}</td>
-        <td>{{this.description}}</td>
-        <td>{{this.status}}</td>
-        <td>{{this.createdAt}}</td>
-        <td>{{this.estimatedCompletion}}</td>
-        <td>
-          {{#if (eq this.status "Pending")}}
-            <button class="btn btn-danger btn-sm cancelBtn" data-id="{{this._id}}">Cancel</button>
-          {{else}}
-            —
-          {{/if}}
-        </td>
-      </tr>
-    {{/each}}
-  </tbody>
-</table>
+<style>
+.hover-highlight:hover {
+    background-color: #f8f9fa;
+    transform: translateX(3px);
+    transition: all 0.2s ease;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 2px solid transparent;
+}
+
+.status-Pending {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffe69c;
+}
+
+.status-Resolved {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #a3cfbb;
+}
+
+.status-Rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f1aeb5;
+}
+
+.status-Completed {
+    background-color: #cfe2ff;
+    color: #052c65;
+    border-color: #9ec5fe;
+}
+
+.status-Pending i { color: #ffc107; }
+.status-Resolved i { color: #198754; }
+.status-Rejected i { color: #dc3545; }
+.status-Completed i { color: #0d6efd; }
+
+.bg-light-primary {
+    background-color: #f8f9fa;
+}
+
+.text-truncate {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
 
 <script>
-  // Semester filter logic
-  document.getElementById("semesterFilter").addEventListener("change", function () {
-    const selectedSemester = this.value;
-    window.location.href = `/student/my-requests?semester=${selectedSemester}`;
-  });
+// Preselect current semester filter
+document.getElementById("semesterFilter").value = "{{selectedSemester}}" || "all";
 
-  document.querySelectorAll(".cancelBtn").forEach(button => {
-    button.addEventListener("click", function () {
-      const requestId = this.dataset.id;
-      if (confirm("Are you sure you want to cancel this request?")) {
-        fetch(`/api/student/cancel-request/${requestId}`, {
-          method: "PATCH"
-        })
-          .then(res => {
-            if (res.ok) {
-              alert("Request canceled successfully.");
-              location.reload(); // Reload the page to reflect changes
-            } else {
-              alert("Error canceling the request.");
+// Filter functionality
+document.getElementById("semesterFilter").addEventListener("change", function() {
+    window.location.href = `/student/my-requests?semester=${this.value}`;
+});
+
+// Enhanced Cancel Button with visual feedback
+document.querySelectorAll(".cancelBtn").forEach(button => {
+    button.addEventListener("click", function() {
+        const requestId = this.dataset.id;
+        const row = this.closest('tr');
+        
+        Swal.fire({
+            title: 'Confirm Cancellation',
+            text: "Are you sure you want to cancel this request?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, cancel it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                
+                fetch(`/api/student/cancel-request/${requestId}`, {
+                    method: "PATCH"
+                }).then(res => {
+                    if (res.ok) {
+                        // Update status badge
+                        const statusBadge = row.querySelector('.status-badge');
+                        statusBadge.className = 'status-badge status-Rejected';
+                        statusBadge.innerHTML = '<i class="fas fa-times-circle"></i>Canceled';
+                        
+                        // Remove cancel button
+                        this.remove();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Cancelled!',
+                            text: 'Request has been canceled',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else {
+                        this.innerHTML = originalHTML;
+                        this.disabled = false;
+                        Swal.fire('Error', 'Failed to cancel request', 'error');
+                    }
+                }).catch(err => {
+                    console.error("Error:", err);
+                    this.innerHTML = originalHTML;
+                    this.disabled = false;
+                    Swal.fire('Error', 'An error occurred', 'error');
+                });
             }
-          })
-          .catch(err => {
-            console.error("Error canceling the request:", err);
-            alert("An error occurred. Please try again later.");
-          });
-      }
+        });
     });
-  });
+});
 </script>
+
+<!-- Required Dependencies -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

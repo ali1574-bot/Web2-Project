@@ -1,379 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <base href="./">
-  <title>Edit Profile</title>
-  <meta charset="utf-8">
-  <!-- Main styles for this application-->
-  <link href="/static/css/style.css" rel="stylesheet">
-  <!-- We use those styles to show code examples, you should remove them in your application.-->
-  <link href="/static/css/examples.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile</title>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .profile-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification-item {
+            border-left: 3px solid #4e73df;
+            transition: all 0.3s ease;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .password-form {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        
+        .info-badge {
+            background-color: #e9ecef;
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1040;
+        }
+
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            z-index: 1050;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .btn-close {
+            border: none;
+            background: transparent;
+            font-size: 1.5rem;
+            color: white;
+        }
+    </style>
 </head>
 
-<body>
-  <div class="row">
-    <div class="col-12">
-      <div class="card mb-4">
-        <div class="card-header"><strong>Edit Profile</strong></div>
-        <div class="card-body">
-          <div class="example">
-            <div class="tab-content rounded-bottom">
-              <div id="landing-page" class="spa-page">
-                <div class="row">
-                  <div class="col-md-5">
-                    <div class="input-group mb-3">
-                      <input type="text" value="{{username}}" disabled id="username"
-                        class="form-control form-control-sm">
-                      <button class="btn btn-outline-primary" onclick="showEditUsername()">Edit</button>
-                    </div>
-                  </div>
-                  <div class="col-md-5">
-                    <div class="input-group mb-3">
-                      <input type="text" value="{{phone}}" disabled id="phone" class="form-control form-control-sm">
-                      <button class="btn btn-outline-primary" onclick="showEditPhone()">Edit</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-5">
-                    <div class="input-group mb-3">
-                      <input type="text" value="{{email}}" disabled id="email" class="form-control form-control-sm">
-                      <button class="btn btn-outline-primary" onclick="showEditEmail()">Edit</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-5">
-                    <button class="btn btn-outline-primary" onclick="showEditPassword()">Reset Password</button>
-                  </div>
-                </div>
-                <div class="notifications">
-                  <h3>Notifications</h3>
-                  <ul id="notifications-list">
-                    {{#each notifications}}
-                      <li>{{this.message}} - {{this.createdAt}}</li>
-                    {{/each}}
-                  </ul>
-                </div>
-                <button id="delete-notifications-btn" class="btn btn-danger">Delete All Notifications</button>
-              </div>
-              <div id="edit-username" class="spa-page"></div>
-              <div id="edit-phone" class="spa-page"></div>
-              <div id="edit-email" class="spa-page"></div>
-              <div id="edit-password" class="spa-page"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function switchPage(page) {
-      let availPages = document.getElementsByClassName('spa-page')
-      for (let p of availPages) {
-        p.style.display = 'none'
-      }
-      document.getElementById(page).style.display = 'block'
-    }
-
-    function showEditUsername() {
-      switchPage("edit-username")
-      let html = `
-        <label class="form-label">New Username:</label>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="input-group mb-1">
-              <input placeholder="username" type="text" name="newUsername" id="newUsername" class="form-control form-control-sm">
-            </div>
-            <div class="alert alert-danger" role="alert" id="userErrMsg" style="display:none;"></div>
-          </div>    
-          <div class="col-md-4">
-            <button class="btn btn-secondary btn-sm btn-danger" onclick="showLandingPage()">Cancel</button>
-            <button class="btn btn-secondary btn-sm btn-success" onclick="updateUsername()">Save Changes</button>
-          </div>      
-        </div>
-        `
-      document.getElementById("edit-username").innerHTML = html
-    }
-
-    function showEditPhone() {
-      switchPage("edit-phone")
-      let html = `
-        <label class="form-label">New Phone Number:</label>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="input-group mb-1">
-              <input placeholder="12345678" type="tel" name="newPhone" id="newPhone" class="form-control form-control-sm">
-            </div>
-            <div class="alert alert-danger" role="alert" id="phoneErrMsg" style="display:none;">Enter a valid phone number</div>
-          </div>    
-          <div class="col-md-4">
-            <button class="btn btn-secondary btn-sm btn-danger" onclick="showLandingPage()">Cancel</button>
-            <button class="btn btn-secondary btn-sm btn-success" onclick="updatePhone()">Save Changes</button>
-          </div>      
-        </div>
-        `
-      document.getElementById("edit-phone").innerHTML = html
-    }
-
-    function showEditEmail() {
-      switchPage("edit-email")
-      let html = `
-        <label class="form-label">New Email:</label>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="input-group mb-1">
-              <input placeholder="name@gmail.com" type="email" name="newEmail" id="newEmail" class="form-control form-control-sm">
-            </div>
-            <div class="alert alert-danger" role="alert" id="emailErrMsg" style="display:none;"></div>
-          </div>    
-          <div class="col-md-4">
-            <button class="btn btn-secondary btn-sm btn-danger" onclick="showLandingPage()">Cancel</button>
-            <button class="btn btn-secondary btn-sm btn-success" onclick="updateEmail()">Save Changes</button>
-          </div>        
-        </div>
-        `
-      document.getElementById("edit-email").innerHTML = html
-    }
-
-    function showEditPassword() {
-      switchPage("edit-password")
-      let html = `
-        <div class="row">
-          <div class="col-md-2">Current Password</div>
-          <div class="col-md-6">
-            <div class="input-group mb-3">
-              <span class="input-group-text">
-                <svg class="icon">
-                <use xlink:href="/static/vendors/@coreui/icons/svg/free.svg#cil-lock-locked"></use>
-                </svg>
-              </span>
-              <label></label>
-              <input class="form-control" type="password" name="oldPass" id="oldPass" placeholder="Current Password">
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-2">New Password</div>
-          <div class="col-md-6">
-            <div class="input-group mb-3">
-              <span class="input-group-text">
-                <svg class="icon">
-                <use xlink:href="/static/vendors/@coreui/icons/svg/free.svg#cil-lock-locked"></use>
-                </svg>
-              </span>
-              <label></label>
-              <input class="form-control" type="password" name="newPass" id="newPass" placeholder="New Password">
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-2">Confirm New Password</div>
-          <div class="col-md-6">
-            <div class="input-group mb-3">
-              <span class="input-group-text">
-                <svg class="icon">
-                <use xlink:href="/static/vendors/@coreui/icons/svg/free.svg#cil-lock-locked"></use>
-                </svg>
-              </span>
-              <label></label>
-              <input class="form-control" type="password" name="confNewPass" id="confNewPass" placeholder="Confirm New Password">
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-8">
-            <div class="alert alert-danger" role="alert" id="passErrMsg" style="display:none;"></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-3"></div>
-        </div> 
-        <br>
+<body class="bg-light">
+    <div class="container py-5">
         <div class="row justify-content-center">
-          <div class="col-md-4">
-            <button class="btn btn-secondary btn-sm btn-danger" onclick="showLandingPage()">Cancel</button>
-            <button class="btn btn-secondary btn-sm btn-success" onclick="updatePassword()">Save Changes</button>
-          </div>
-        </div> 
-        `
-      document.getElementById("edit-password").innerHTML = html
-    }
+            <div class="col-lg-8">
+                <!-- Profile Card -->
+                <div class="card profile-card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-user-circle me-2"></i>Student Profile</h3>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Read-only Information -->
+                        <div class="info-badge">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h5><i class="fas fa-user-tag me-2"></i>Username</h5>
+                                    <p class="mb-0">{{username}}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h5><i class="fas fa-envelope me-2"></i>Email</h5>
+                                    <p class="mb-0">{{email}}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5><i class="fas fa-phone me-2"></i>Phone</h5>
+                                    <p class="mb-0">{{phone}}</p>
+                                </div>
+                            </div>
+                        </div>
 
-    async function updateUsername() {
-      let response = await fetch('/api/user')
-      let allUsers = await response.json();
-      let newuser = document.getElementById("newUsername").value
-      let errMsg = document.getElementById("userErrMsg")
-      for (let u of allUsers) {
-        if (u.username == newuser) {
-          errMsg.innerHTML = "Username already taken"
-          errMsg.style.display = "block"
-          return
-        }
-      }
-      if (newuser.trim() == "") {
-        errMsg.innerHTML = "Enter a valid username"
-        errMsg.style.display = "block"
-        return
-      }
-      else {
-        errMsg.style.display = "none"
-        let username = document.getElementById("username").value
-        document.getElementById("username").value = newuser
-        let update = {
-          newuser: newuser
-        }
-        await fetch(`/api/user/${username}/username`, {
-          method: "PATCH",
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(update)
-        })
-        await showLandingPage()
-      }
-    }
+                        <!-- Password Reset Section -->
+                        <div class="password-form mb-4">
+                            <h4 class="mb-4"><i class="fas fa-lock me-2"></i>Password Management</h4>
+                            <button class="btn btn-primary" onclick="showEditPassword()">
+                                <i class="fas fa-key me-2"></i>Change Password
+                            </button>
+                        </div>
 
-    async function updatePhone() {
-      let newPhone = document.getElementById("newPhone").value
-      let errMsg = document.getElementById("phoneErrMsg")
-      if (isNaN(Number(newPhone)) || newPhone.length != 8) {
-        errMsg.style.display = "block"
-        return
-      }
-      errMsg.style.display = "none"
-      document.getElementById("phone").value = newPhone
-      let username = document.getElementById("username").value
-      let update = {
-        newPhone: newPhone
-      }
-      await fetch(`/api/user/${username}/phone`, {
-        method: "PATCH",
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(update)
-      })
-      await showLandingPage()
-    }
+                        <!-- Notifications Section -->
+                        <div class="notifications-section">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4><i class="fas fa-bell me-2"></i>Notifications</h4>
+                                <button id="delete-notifications-btn" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>Clear All
+                                </button>
+                            </div>
+                            
+                            <div id="notifications-list">
+                                {{#each notifications}}
+                                <div class="notification-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-info-circle me-2 text-primary"></i>
+                                            {{this.message}}
+                                        </div>
+                                        <small class="text-muted">{{this.createdAt}}</small>
+                                    </div>
+                                </div>
+                                {{/each}}
+                                {{^notifications}}
+                                <div class="text-center text-muted py-4">
+                                    No new notifications
+                                </div>
+                                {{/notifications}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    async function updateEmail() {
-      let newEmail = document.getElementById("newEmail").value
-      let errMsg = document.getElementById("emailErrMsg")
-      if (!newEmail.includes('@') || newEmail.indexOf('@') == 0 || newEmail.length - 1 - newEmail.indexOf('@') < 3) {
-        errMsg.style.display = "block"
-        errMsg.innerHTML = "Enter a valid email"
-        return
-      }
-      let response = await fetch('/api/user')
-      let allUsers = await response.json();
-      for (let u of allUsers) {
-        if (u.email == newEmail) {
-          errMsg.innerHTML = "Email already taken"
-          errMsg.style.display = "block"
-          return
-        }
-      }
+    <!-- Password Reset Modal -->
+    <div id="edit-password" class="spa-page" style="display: none;">
+        <div class="modal-backdrop" onclick="showLandingPage()"></div>
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-key me-2"></i>Change Password</h5>
+                <button type="button" class="btn-close" onclick="showLandingPage()">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Content populated by JavaScript -->
+            </div>
+        </div>
+    </div>
 
-      errMsg.innerHTML = ""
-      errMsg.style.display = "none"
-      document.getElementById("email").value = newEmail
-      let username = document.getElementById("username").value
-      let update = {
-        newEmail: newEmail
-      }
-      await fetch(`/api/user/${username}/email`, {
-        method: "PATCH",
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(update)
-      })
-      await showLandingPage()
+    <script>
+    function showEditPassword() {
+        const modal = document.getElementById('edit-password');
+        modal.style.display = 'block';
+        
+        const html = `
+            <div class="mb-3">
+                <label class="form-label"><i class="fas fa-lock me-2"></i>Current Password</label>
+                <input type="password" class="form-control" id="oldPass" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><i class="fas fa-key me-2"></i>New Password</label>
+                <input type="password" class="form-control" id="newPass" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label"><i class="fas fa-check-circle me-2"></i>Confirm Password</label>
+                <input type="password" class="form-control" id="confNewPass" required>
+            </div>
+            <div class="alert alert-danger" id="passErrMsg" style="display: none;"></div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-secondary" onclick="showLandingPage()">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="updatePassword()">
+                    <i class="fas fa-save me-2"></i>Update Password
+                </button>
+            </div>
+        `;
+        
+        document.querySelector('#edit-password .modal-body').innerHTML = html;
     }
 
     async function updatePassword() {
-      let oldPass = document.getElementById("oldPass").value
-      let errMsg = document.getElementById("passErrMsg")
-      let username = document.getElementById("username").value
-      let pass = { oldPassword: oldPass }
-      let response =
-        await fetch(`/api/user/${username}/password-verify`, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(pass)
-        })
-      let result = await response.json()
-      if (!result.flag) {
-        errMsg.style.display = "block"
-        errMsg.innerHTML = "Current Password is wrong!!"
-        return
-      }
+        const oldPass = document.getElementById('oldPass').value;
+        const newPass = document.getElementById('newPass').value;
+        const confNewPass = document.getElementById('confNewPass').value;
+        const errMsg = document.getElementById('passErrMsg');
+        const username = "{{username}}";
 
-      let newPass = document.getElementById("newPass").value
-      if (newPass == oldPass) {
-        errMsg.style.display = "block"
-        errMsg.innerHTML = "The old password and the new password is the same"
-        return
-      }
+        // Reset error message
+        errMsg.style.display = 'none';
+        errMsg.textContent = '';
 
-      let confNewPass = document.getElementById("confNewPass").value
+        try {
+            // Verify current password
+            const verifyResponse = await fetch(`/api/user/${username}/password-verify`, {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ oldPassword: oldPass })
+            });
 
-      if (newPass.trim() == "") {
-        errMsg.style.display = "block"
-        errMsg.innerHTML = "Please enter a new password"
-        return
-      }
+            const verifyResult = await verifyResponse.json();
+            
+            if (!verifyResult.flag) {
+                throw new Error('Current password is incorrect');
+            }
 
-      if (newPass != confNewPass) {
-        errMsg.style.display = "block"
-        errMsg.innerHTML = "Confirm Password doesn't match"
-        return
-      }
-      errMsg.style.display = "none"
-      errMsg.innerHTML = ""
-      let update = {
-        newPassword: newPass
-      }
-      await fetch(`/api/user/${username}/password`, {
-        method: "PATCH",
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(update)
-      })
-      await switchPage("landing-page")
+            if (newPass !== confNewPass) {
+                throw new Error('New passwords do not match');
+            }
+
+            if (newPass === oldPass) {
+                throw new Error('New password must be different from current password');
+            }
+
+            // Update password
+            const updateResponse = await fetch(`/api/user/${username}/password`, {
+                method: "PATCH",
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ newPassword: newPass })
+            });
+
+            if (updateResponse.ok) {
+                alert('Password updated successfully!');
+                showLandingPage();
+            } else {
+                throw new Error('Failed to update password');
+            }
+
+        } catch (error) {
+            errMsg.textContent = error.message;
+            errMsg.style.display = 'block';
+        }
     }
 
     function showLandingPage() {
-      switchPage("landing-page")
+        document.getElementById('edit-password').style.display = 'none';
     }
 
-    showLandingPage()
-
+    // Notifications Deletion
     document.getElementById('delete-notifications-btn').addEventListener('click', async () => {
-      try {
-        const response = await fetch('/api/notifications', {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          alert('Notifications deleted successfully');
-          document.getElementById('notifications-list').innerHTML = ''; // Clear the notifications list
-        } else {
-          alert('Failed to delete notifications');
+        if (confirm('Are you sure you want to delete all notifications?')) {
+            try {
+                const response = await fetch('/api/notifications', { method: 'DELETE' });
+                
+                if (response.ok) {
+                    document.getElementById('notifications-list').innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            No new notifications
+                        </div>
+                    `;
+                } else {
+                    alert('Failed to clear notifications');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+            }
         }
-      } catch (error) {
-        console.error('Error deleting notifications:', error);
-        alert('An error occurred while deleting notifications');
-      }
     });
-  </script>
+    </script>
 </body>
-
 </html>

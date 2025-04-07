@@ -1,26 +1,115 @@
+<!-- Student Accounts Section -->
 <div class="row">
-  <div class="col-md-6">
-    <!-- student User Accounts Card -->
-    <div class="card mb-4">
-      <div class="card-header text-center">
-        <h5>student User Accounts</h5>
-      </div>
-      <div class="card-body">
-        <div class="list-group">
-          {{#each studentUsers}}
-          <div class="list-group-item d-flex align-items-center">
-            <div class="avatar avatar-md me-3">
-              <img class="avatar-img" src="/static/assets/img/avatars/2.jpg" alt="{{this.username}}@email.com">
-              <span class="avatar-status bg-success"></span>
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white border-0 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h4 class="mb-0"><i class="fas fa-user-graduate me-2 text-primary"></i>Student Accounts Management</h4>
+          <div class="d-flex gap-2">
+            <div class="input-group input-group-sm" style="max-width: 300px;">
+              <span class="input-group-text bg-transparent"><i class="fas fa-search"></i></span>
+              <input type="text" class="form-control" placeholder="Search students...">
             </div>
-            <div>
-              <h6 class="mb-0">{{this.username}}</h6>
-              <small class="text-muted">Registered: {{this.registeredDate}}</small>
+            <button class="btn btn-sm btn-primary"><i class="fas fa-plus me-2"></i>Add New</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="row g-4">
+          {{#each studentUsers}}
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card user-card hover-lift">
+              <div class="card-body">
+                <div class="d-flex align-items-start">
+                  <div class="avatar avatar-xl me-3 position-relative">
+                    <img src="/static/assets/img/avatars/2.jpg" class="avatar-img rounded-circle" alt="{{this.username}}">
+                    <span class="position-absolute bottom-0 end-0 bg-{{#if this.active}}success{{else}}secondary{{/if}} rounded-circle p-1 border-2 border-white"></span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="mb-1">{{this.username}}</h5>
+                    <div class="text-muted small mb-2">
+                      <i class="fas fa-envelope me-1"></i>{{this.email}}
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                      <div class="badge bg-primary-subtle text-primary me-2">
+                        <i class="fas fa-calendar-day me-1"></i>{{this.registeredDate}}
+                      </div>
+                      <div class="badge bg-{{#if this.active}}success-subtle text-success{{else}}danger-subtle text-danger{{/if}}">
+                        {{#if this.active}}Active{{else}}Inactive{{/if}}
+                      </div>
+                    </div>
+                    <div class="progress mb-3" style="height: 6px;">
+                      <div class="progress-bar bg-success" role="progressbar" style="width: 85%" 
+                           aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-success ms-auto">
+                        <i class="fas fa-eye me-1"></i>Profile
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           {{/each}}
         </div>
       </div>
+
+      <div class="card-footer bg-white border-0 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small">Showing {{studentUsers.length}} of 124 students</span>
+          <nav aria-label="User pagination">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+.user-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.075);
+}
+
+.user-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.avatar-img {
+  object-fit: cover;
+  border: 2px solid #fff;
+}
+
+.progress {
+  border-radius: 10px;
+  background-color: rgba(0,0,0,0.05);
+}
+
+.progress-bar {
+  border-radius: 10px;
+}
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+<!-- Required Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
