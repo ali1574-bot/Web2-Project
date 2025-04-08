@@ -204,16 +204,6 @@ async function fetchAllStudentUsers() {
   return studentUsers;
 }
 
-/**
- * Fetches all manager users from the database.
- * 
- * @returns {Array} A list of manager users.
- */
-async function fetchAllManagerUsers() {
-  await connectToDatabase();
-  let managerUsers = await users.find({ userType: "manager" }).toArray();
-  return managerUsers;
-}
 
 /**
  * Adds a new user to the database.
@@ -420,7 +410,7 @@ async function deleteNotificationsByStudentId(studentId) {
 
 module.exports = {
   fetchUserDetails, saveSessionData, fetchSessionData, updateSessionData, deleteSessionData,
-  fetchAllStudentUsers, fetchAllManagerUsers, addNewUser, fetchAllUsers, updateUsername,
+  fetchAllStudentUsers, addNewUser, fetchAllUsers, updateUsername,
   updatePhoneNumber, updateEmailAddress, countTotalUsers, updateSessionUsername, updateUserPassword,
   updateUserRecord, fetchTokenDetails, fetchEmailDetails, fetchToken, fetchStudentRequests,
   fetchStudentRequestsBySemester, updateRequestStatus, updateRequestStatusAndNote, addRequest, getQueueLength, fetchRequestById,

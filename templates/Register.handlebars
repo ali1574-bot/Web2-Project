@@ -34,23 +34,26 @@
       let type = "student"
 
       let details = {
-        username: username,
-        password: password,
-        userType: type,
-        email: email,
-        phone: phone,
-        registeredDate: new Date(),
-        userId: '{{userId}}'
-      }
-      await fetch(`/api/user`, {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(details)
-      })
-      window.location.href = "/login";
-    }
+    username: username,
+    password: password,
+    userType: type,
+    email: email,
+    phone: phone,
+    registeredDate: new Date(),
+    userId: '{{userId}}',
+    _csrf: document.querySelector('input[name="_csrf"]').value // Add CSRF token
+  }
+  
+  await fetch(`/api/user`, {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json',
+      'CSRF-Token': document.querySelector('input[name="_csrf"]').value // Add to headers
+    },
+    body: JSON.stringify(details)
+  })
+  window.location.href = "/login";
+}
 
     async function checkUsername() {
       let errMsg = document.getElementById("uname-error");
@@ -224,7 +227,7 @@
               <div class="col-md-8">
                 <div class="alert alert-danger" role="alert" id="phone-error" style="display:none;"></div>
               </div>
-
+              <input type="hidden" name="_csrf" value="{{csrfToken}}">
               <button class="btn btn-block btn-success" onclick="createAccount()">Create Account</button>
 
               <div id="error-message" style="color:red"></div>

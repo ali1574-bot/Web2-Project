@@ -28,6 +28,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 app.use("/", express.static(__dirname + "/"));
+const csrf = require('csurf');
+const csrfProtection = csrf({ cookie: true });
+app.use(cookieParser());
+app.use(function (err, req, res, next) {
+  if (err.code !== 'EBADCSRFTOKEN') return next(err);
+  
+  // Handle CSRF token errors 
+  res.status(403);
+  res.send('Form tampered with or session expired');
+});
+
+
 
 // Custom 404 error handling
 function handle404Error(req, res) {
@@ -48,7 +60,7 @@ app.get('/api/user', async (req, res) => {
 });
 
 // Route to register a new user
-app.post('/api/user', async (req, res) => {
+app.post('/api/user', csrfProtection, async (req, res) => {
   let data = req.body;
   data.registeredDate = new Date(data.registeredDate);
 
@@ -126,11 +138,7 @@ app.post('/login-form', async (req, res) => {
   }
 });
 
-// Route to render forget password page
-app.get('/forgetPassword', async (req, res) => {
-  let resetMsg = req.query.resetMsg;
-  res.render('ForgetPassword', { layout: undefined, msg: resetMsg });
-});
+
 
 // Route to handle forget password form submission
 app.post('/forgetPassword', async (req, res) => {
@@ -309,12 +317,10 @@ app.get("/admin/StudentAccounts", async (req, res) => {
   }
 
   let studentUsers = await business.fetchAllStudentUsers();
-  let managerUsers = await business.fetchAllManagerUsers();
   res.render("StudentAccounts", {
     link: "User Accounts",
     layout: "admin_layout",
     studentUsers: studentUsers,
-    managerUsers: managerUsers,
     userId: userId
   });
 });
@@ -346,12 +352,17 @@ app.get('/admin/queue-management', async (req, res) => {
   });
 });
 
-// Route to render registration page
-app.get('/registerNow', async (req, res) => {
+// Updated register route to include CSRF token
+app.get('/registerNow', csrfProtection, async (req, res) => {
   let sessionId = req.cookies.projectkey;
   let flashMessage = await flash.getFlash(sessionId);
   let userId = await business.generateNextUserId();
-  res.render('Register', { layout: undefined, message: flashMessage, userId: userId });
+  res.render('Register', { 
+    layout: undefined, 
+    message: flashMessage, 
+    userId: userId,
+    csrfToken: req.csrfToken() // Add CSRF token to the view
+  });
 });
 
 // Route to handle email verification
@@ -407,7 +418,7 @@ app.get('/student/submit-request', async (req, res) => {
   }
 
     res.render('SubmitRequest', {
-    layout: 'profile', // Ensure this layout exists
+    layout: 'profile', 
     username: sessionData.data.username
   });
 });

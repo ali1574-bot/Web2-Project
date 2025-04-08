@@ -205,39 +205,8 @@ async function updateSessionUsername(username, newUsername) {
   return await persistence.updateSessionUsername(username, newUsername);
 }
 
-/**
- * Updates the username on the profile page.
- * 
- * @param {string} oldUsername - The old username.
- * @param {string} newUsername - The new username.
- * @returns {Promise<void>} Resolves when the username is updated.
-*/
-async function updateUserUsername(oldUsername, newUsername) {
-  await persistence.updateUsername(oldUsername, newUsername);
-  await updateSessionUsername(oldUsername, newUsername);
-}
 
-/**
- * Updates the phone number of a user on their profile.
- * 
- * @param {string} newPhone - The new phone number.
- * @param {string} username - The username of the user.
- * @returns {Promise<void>} Resolves when the phone number is updated.
- */
-async function updateUserPhone(newPhone, username) {
-  await persistence.updatePhoneNumber(newPhone, username);
-}
 
-/**
- * Updates the email address of a user on their profile.
- * 
- * @param {string} newEmail - The new email address.
- * @param {string} username - The username of the user.
- * @returns {Promise<void>} Resolves when the email address is updated.
-*/
-async function updateUserEmail(newEmail, username) {
-  await persistence.updateEmailAddress(newEmail, username);
-}
 
 /**
  * Fetches both email and phone details of a user by their username.
@@ -269,24 +238,6 @@ async function fetchAllStudentUsers() {
   return studentUsers;
 }
 
-/**
- * Fetches all manager user records.
- * 
- * @returns {Promise<Array>} An array of manager user records.
- */
-async function fetchAllManagerUsers() {
-  let managerUsers = await persistence.fetchAllManagerUsers();
-  for (let user of managerUsers) {
-    delete user.password;
-    if (user.registeredDate) {
-      user.registeredDate = user.registeredDate.toLocaleDateString();
-    } else {
-      user.registeredDate = 'Date not available';
-    }
-    user.username = user.username.toUpperCase();
-  }
-  return managerUsers;
-}
 
 /**
  * Verifies if the user's ID matches the provided one.
@@ -331,7 +282,7 @@ async function generatePasswordResetToken(email) {
   let randomToken = Math.floor(Math.random() * 1000000);
   let emailDetails = await persistence.fetchEmailDetails(email);
   emailDetails.token = randomToken;
-  
+  emailDetails.tokenTimestamp = Date.now(); // Add a timestamp for the token
   await persistence.updateUserRecord(emailDetails);
   return randomToken;
 }
@@ -457,6 +408,7 @@ async function cancelStudentRequest(requestId) {
  * @returns {Promise<void>}
  */
 async function addStudentRequest(request) {
+  request.estimatedCompletion = await calculateEstimatedCompletion(request.type);
   await persistence.addRequest(request);
   let message = `Your request for "${request.type}" has been submitted successfully.`;
   await persistence.saveNotification(request.studentId, message);
@@ -479,44 +431,95 @@ async function calculateEstimatedCompletion(type) {
   try {
     let queueLength = await persistence.getQueueLength(type);
 
-    // Define processing times for each request type
+    // Define processing times for each request type (in minutes)
     const processingTimes = {
-      "Transcript": 15, // 15 minutes per request
+      "Transcript": 15,      // 15 minutes per request
       "Enrollment Letter": 20, // 20 minutes per request
-      "Grade Appeal": 30 // 30 minutes per request
+      "Grade Appeal": 30      // 30 minutes per request
     };
 
-    // Get the processing time for the given type, default to 15 minutes if not found
-    let processingTimePerRequest = processingTimes[type] || 15;
+    // Get processing time for this request type (default to 15 minutes)
+    const processingTimePerRequest = processingTimes[type] || 15;
+    let totalProcessingTime = (queueLength + 1) * processingTimePerRequest; // Add +1 to ensure it's always in the future
 
-    let totalProcessingTime = queueLength * processingTimePerRequest; // Total processing time in minutes
+    // Get current time
+    let estimatedCompletion = new Date();
+    
+    // Define working hours (9am to 5pm)
+    const WORK_START_HOUR = 9;  // 9:00 AM
+    const WORK_END_HOUR = 17;   // 5:00 PM
+    const WORK_DAY_START = WORK_START_HOUR * 60; // Convert to minutes
+    const WORK_DAY_END = WORK_END_HOUR * 60;     // Convert to minutes
+    const WORK_DAY_LENGTH = WORK_DAY_END - WORK_START_HOUR;
 
-    let estimatedCompletion = new Date(); // Start from the current time
+    // Helper function to check if current time is within working hours
+    function isWorkingTime(date) {
+      const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const currentTimeInMinutes = hours * 60 + minutes;
+      return day !== 0 && day !== 6 && 
+             currentTimeInMinutes >= WORK_DAY_START && 
+             currentTimeInMinutes < WORK_DAY_END;
+    }
 
-    // Define working hours
-    const WORK_START_HOUR = 9; // 9:00 AM
-    const WORK_END_HOUR = 17; // 5:00 PM
+    // If current time is outside working hours, move to next work day at 9am
+    if (!isWorkingTime(estimatedCompletion)) {
+      // Move to next work day at 9am
+      estimatedCompletion.setHours(WORK_START_HOUR, 0, 0, 0);
+      
+      // If it's Saturday, move to Monday
+      if (estimatedCompletion.getDay() === 6) {
+        estimatedCompletion.setDate(estimatedCompletion.getDate() + 2);
+      } 
+      // If it's Sunday, move to Monday
+      else if (estimatedCompletion.getDay() === 0) {
+        estimatedCompletion.setDate(estimatedCompletion.getDate() + 1);
+      }
+      // If it's a weekday but after hours, move to next day
+      else if (estimatedCompletion.getHours() >= WORK_END_HOUR) {
+        estimatedCompletion.setDate(estimatedCompletion.getDate() + 1);
+      }
+    }
 
+    // While we still have processing time left
     while (totalProcessingTime > 0) {
-      // Check if the current time is within working hours
-      if (
-        estimatedCompletion.getHours() >= WORK_START_HOUR &&
-        estimatedCompletion.getHours() < WORK_END_HOUR &&
-        estimatedCompletion.getDay() !== 0 && // Skip Sunday
-        estimatedCompletion.getDay() !== 6 // Skip Saturday
-      ) {
-        // Deduct processing time from the total
-        totalProcessingTime -= 1; // Deduct 1 minute
+      const currentDay = estimatedCompletion.getDay();
+      const currentHours = estimatedCompletion.getHours();
+      const currentMinutes = estimatedCompletion.getMinutes();
+      const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+
+      // Skip weekends
+      if (currentDay === 0 || currentDay === 6) {
+        // Move to next Monday at 9am
+        const daysToAdd = currentDay === 6 ? 2 : 1;
+        estimatedCompletion.setDate(estimatedCompletion.getDate() + daysToAdd);
+        estimatedCompletion.setHours(WORK_START_HOUR, 0, 0, 0);
+        continue;
       }
 
-      // Increment the time by 1 minute
-      estimatedCompletion.setMinutes(estimatedCompletion.getMinutes() + 1);
+      // Calculate remaining work time today
+      const remainingToday = WORK_DAY_END - currentTimeInMinutes;
+      
+      // If we can finish today
+      if (totalProcessingTime <= remainingToday) {
+        estimatedCompletion.setMinutes(estimatedCompletion.getMinutes() + totalProcessingTime);
+        totalProcessingTime = 0;
+      } else {
+        // Use up remaining time today and continue tomorrow
+        totalProcessingTime -= remainingToday;
+        estimatedCompletion.setDate(estimatedCompletion.getDate() + 1);
+        estimatedCompletion.setHours(WORK_START_HOUR, 0, 0, 0);
+      }
     }
 
     return estimatedCompletion;
   } catch (error) {
     console.error("Error calculating estimated completion:", error);
-    throw error;
+    // Return a fallback date (current time + 1 day) if calculation fails
+    const fallbackDate = new Date();
+    fallbackDate.setDate(fallbackDate.getDate() + 1);
+    return fallbackDate;
   }
 }
 
@@ -650,9 +653,8 @@ async function fetchRequestById(requestId) {
 
 module.exports = {
   validateLoginCredentials, createNewSession, fetchSessionData, validateUserById,
-  removeSession, fetchAllStudentUsers, fetchAllManagerUsers, registerNewUser,
-  fetchAllUsers, fetchUserContactDetails, updateUserUsername, updateUserPhone,
-  updateUserEmail, countTotalUsers, retrieveUserIdByUsername, updateUserPasswordByUsername,
+  removeSession, fetchAllStudentUsers, registerNewUser,
+  fetchAllUsers, fetchUserContactDetails,countTotalUsers, retrieveUserIdByUsername, updateUserPasswordByUsername,
   verifyCurrentPassword, updateSessionUsername, generateNextUserId, verifyEmailAndGenerateToken,
   sendPasswordResetEmail, sendEmailVerificationLink, updateUserVerificationStatus,
   fetchTokenDetails, updateUserPassword, removeToken, fetchStudentRequests,
