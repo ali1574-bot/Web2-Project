@@ -1,22 +1,21 @@
 // ** Ali Awadallah 60301637 ** 
 // ** Diya Rafat 60301627 ** 
 
-
 const persistence = require("./persistence.js");
 const crypto = require("crypto");
 const nodemailer = require('nodemailer');
-const emailService = require('./emailService');
 
-let transporter = nodemailer.createTransport({
+// Email Configuration
+const emailTransporter = nodemailer.createTransport({
     host: "127.0.0.1",
     port: 25
 });
 
+
 /**
  * Counts the total number of users in the system.
- * 
  * @returns {Promise<number>} The total number of users.
- */
+*/
 async function countTotalUsers() {
   return await persistence.countTotalUsers();
 }
@@ -25,7 +24,7 @@ async function countTotalUsers() {
  * Generates the next available user ID for a new account.
  * 
  * @returns {Promise<string>} The next available user ID as a string.
- */
+*/
 async function generateNextUserId() {
   let userCount = await countTotalUsers();
   let nextUserId = (userCount + 1 + 60000).toString();
@@ -63,7 +62,7 @@ async function registerNewUser(data) {
  * @param {string} username - The username of the user.
  * @param {string} password - The password provided by the user.
  * @returns {Promise<string|undefined>} The user type if valid, or undefined if invalid.
- */
+*/
 async function validateLoginCredentials(username, password) {
   let userDetails = await persistence.fetchUserDetails(username);
   if (!userDetails) {
@@ -92,7 +91,7 @@ async function validateLoginCredentials(username, password) {
  * 
  * @param {Object} data - The user data to store in the session.
  * @returns {Promise<Object>} The session data including the session key and expiry.
- */
+*/
 async function createNewSession(data) {
   let sessionId = crypto.randomUUID();
   let sessionData = {
@@ -119,7 +118,7 @@ async function fetchSessionData(key) {
  * 
  * @param {string} key - The session key to delete.
  * @returns {Promise<void>} Resolves when the session is deleted.
- */
+*/
 async function removeSession(key) {
   return await persistence.deleteSessionData(key);
 }
@@ -173,7 +172,7 @@ async function updateUserPasswordByUsername(username, newPassword) {
  * @param {string} email - The email of the user.
  * @param {string} password - The new password to set.
  * @returns {Promise<void>} Resolves when the password is updated.
- */
+*/
 async function updateUserPassword(email, password) {
   let hash = crypto.createHash('sha256');
   hash.update(password);
@@ -201,7 +200,7 @@ async function removeToken(token) {
  * @param {string} username - The current username.
  * @param {string} newUsername - The new username to set.
  * @returns {Promise<void>} Resolves when the session data is updated.
- */
+*/
 async function updateSessionUsername(username, newUsername) {
   return await persistence.updateSessionUsername(username, newUsername);
 }
@@ -212,7 +211,7 @@ async function updateSessionUsername(username, newUsername) {
  * @param {string} oldUsername - The old username.
  * @param {string} newUsername - The new username.
  * @returns {Promise<void>} Resolves when the username is updated.
- */
+*/
 async function updateUserUsername(oldUsername, newUsername) {
   await persistence.updateUsername(oldUsername, newUsername);
   await updateSessionUsername(oldUsername, newUsername);
@@ -235,7 +234,7 @@ async function updateUserPhone(newPhone, username) {
  * @param {string} newEmail - The new email address.
  * @param {string} username - The username of the user.
  * @returns {Promise<void>} Resolves when the email address is updated.
- */
+*/
 async function updateUserEmail(newEmail, username) {
   await persistence.updateEmailAddress(newEmail, username);
 }
@@ -245,7 +244,7 @@ async function updateUserEmail(newEmail, username) {
  * 
  * @param {string} username - The username to look up.
  * @returns {Promise<Array>} An array containing the email and phone number of the user.
- */
+*/
 async function fetchUserContactDetails(username) {
   let userData = await persistence.fetchUserDetails(username);
   return [userData.email, userData.phone];
@@ -255,7 +254,7 @@ async function fetchUserContactDetails(username) {
  * Fetches all student user records.
  * 
  * @returns {Promise<Array>} An array of student user records.
- */
+*/
 async function fetchAllStudentUsers() {
   let studentUsers = await persistence.fetchAllStudentUsers();
   for (let user of studentUsers) {
@@ -295,7 +294,7 @@ async function fetchAllManagerUsers() {
  * @param {string} username - The username of the user.
  * @param {string} id - The ID to verify.
  * @returns {Promise<boolean>} True if the ID matches, false otherwise.
- */
+*/
 async function validateUserById(username, id) {
   let userDetails = await persistence.fetchUserDetails(username);
   if (userDetails.studentID == id) {
@@ -311,11 +310,14 @@ async function validateUserById(username, id) {
  * @returns {Promise<string|undefined>} The reset token if the email exists, undefined if not.
  */
 async function verifyEmailAndGenerateToken(email) {
-  let emailDetails = await persistence.fetchEmailDetails(email);
-  if (!emailDetails) {
-    return;
+  const emailDetails = await persistence.fetchEmailDetails(email);
+  if (!emailDetails) return;
+  
+  if (emailDetails.token && emailDetails.tokenTimestamp > Date.now() - 300000) {
+    return emailDetails.token; // Return existing token
   }
-  let token = await generatePasswordResetToken(email);
+
+  const token = await generatePasswordResetToken(email);
   return token;
 }
 
@@ -329,6 +331,7 @@ async function generatePasswordResetToken(email) {
   let randomToken = Math.floor(Math.random() * 1000000);
   let emailDetails = await persistence.fetchEmailDetails(email);
   emailDetails.token = randomToken;
+  
   await persistence.updateUserRecord(emailDetails);
   return randomToken;
 }
@@ -338,41 +341,40 @@ async function generatePasswordResetToken(email) {
  * 
  * @param {string} token - The token to look up.
  * @returns {Promise<Object>} The token details.
- */
+*/
 async function fetchTokenDetails(token) {
   let result = await persistence.fetchToken(token);
   return result;
 }
-
-/**
- * Sends a password reset email to the user with a reset link.
- * 
- * @param {string} to - The email address to send the reset email to.
- * @param {string} key - The reset token.
- * @returns {Promise<number>} Resolves when the email is simulated, returns 0 if failed.
- */
-async function sendPasswordResetEmail(to, key) {
-  let body = `<a href="http://127.0.0.1:8000/reset-password/?key=${key}">Reset Link</a>`;
-  try {
-    await emailService.sendEmail(to, "Reset Password Link", body);
-  } catch {
-    return 0;
-  }
+async function sendEmail(to, subject, body) {
+    console.log(`Email Details:\nTo: ${to}\nSubject: ${subject}\nBody: ${body}`);
+    return { accepted: [to] }; // Simulate success
 }
 
 /**
- * Sends an email verification link to the user's email address.
- * 
- * @param {string} to - The email address to send the verification link to.
- * @param {string} key - The verification token.
+ * Sends a password reset email to the user with a reset link.
+ * @param {string} to - The email address to send the reset email to.
+ * @param {string} key - The reset token.
  * @returns {Promise<number>} Resolves when the email is simulated, returns 0 if failed.
- */
-async function sendEmailVerificationLink(to, key) {
-  let body = `<a href="http://127.0.0.1:8000/verify-email?token=${key}">Verify Email</a>`;
+*/
+async function sendPasswordResetEmail(to, key) {
+  let resetLink = `http://127.0.0.1:8000/reset-password?resetKey=${key}`;
+  let body = `Click the following link to reset your password: ${resetLink}`;
   try {
-    await emailService.sendEmail(to, "Email Verification Link", body);
+      await sendEmail(to, "Reset Password Link", body);
+      return 1;
   } catch {
-    return 0;
+      return 0;
+  }
+}
+
+async function sendEmailVerificationLink(to, key) {
+  let body = `http://127.0.0.1:8000/verify-email?token=${key}`;
+  try {
+      await sendEmail(to, "Email Verification Link", body);
+      return 1;
+  } catch {
+      return 0;
   }
 }
 
@@ -433,63 +435,37 @@ async function fetchStudentRequestsBySemester(studentId, semester) {
 
 /**
  * Cancels a student request by updating its status to "Canceled."
- * 
  * @param {string} requestId - The ID of the request to cancel.
  * @returns {Promise<void>}
  */
 async function cancelStudentRequest(requestId) {
-  // Update the request status to "Canceled"
   await persistence.updateRequestStatus(requestId, "Canceled");
-
-  // Fetch the request details to get the student ID and type
   let requestDetails = await persistence.fetchRequestById(requestId);
-
-  // Save a notification for the student
   let message = `Your request for "${requestDetails.type}" has been canceled.`;
   await persistence.saveNotification(requestDetails.studentId, message);
-
-  // Fetch the student's email
   let studentDetails = await persistence.fetchUserDetails(requestDetails.studentId);
-  let email = studentDetails.email;
-
-  // Prepare the email content
-  let subject = "Request Status Update";
-  let body = message;
-
-  // Send the email
   try {
-    await emailService.sendEmail(email, subject, body);
+      await sendEmail(studentDetails.email, "Request Status Update", message);
   } catch (error) {
-    console.error("Error sending email:", error);
+      console.error("Error sending email:", error);
   }
 }
 
 /**
  * Adds a new student request to the database.
- * 
  * @param {Object} request - The request details.
  * @returns {Promise<void>}
  */
 async function addStudentRequest(request) {
   await persistence.addRequest(request);
-
-  // Save a notification for the student
   let message = `Your request for "${request.type}" has been submitted successfully.`;
   await persistence.saveNotification(request.studentId, message);
-
-  // Fetch the student's email
   let studentDetails = await persistence.fetchUserDetails(request.studentId);
-  let email = studentDetails.email;
-
-  // Prepare the email content
-  let subject = "Request Status Update";
-  let body = `Your request for "${request.type}" has been submitted successfully.\nDescription: ${request.description}`;
-
-  // Send the email
   try {
-    await emailService.sendEmail(email, subject, body);
+      await sendEmail(studentDetails.email, "Request Status Update", 
+          `Your request for "${request.type}" has been submitted successfully.\nDescription: ${request.description}`);
   } catch (error) {
-    console.error("Error sending email:", error);
+      console.error("Error sending email:", error);
   }
 }
 
@@ -567,40 +543,27 @@ async function fetchQueueDetails() {
 }
 
 /**
- * Updates the status of a request, saves a note, and sends a notification to the student.
- * 
+ * Updates the status of a request and notifies the student.
  * @param {string} requestId - The ID of the request to update.
  * @param {string} status - The new status to set.
  * @param {string} note - The note added by the admin.
  * @returns {Promise<void>}
  */
 async function updateRequestStatus(requestId, status, note) {
-  // Update the request status and note in the database
   await persistence.updateRequestStatusAndNote(requestId, status, note);
-
-  // Fetch the request details to get the student ID and email
   let requestDetails = await persistence.fetchRequestById(requestId);
   let studentDetails = await persistence.fetchUserDetails(requestDetails.studentId);
-
-  // Save a notification for the student
   let message = `Your request for "${requestDetails.type}" has been ${status.toLowerCase()}.\nNote: ${note}`;
   await persistence.saveNotification(requestDetails.studentId, message);
-
-  // Send a notification email to the student
-  let email = studentDetails.email;
-  let subject = "Request Status Update";
-  let body = message;
-
   try {
-    await emailService.sendEmail(email, subject, body);
+      await sendEmail(studentDetails.email, "Request Status Update", message);
   } catch (error) {
-    console.error("Error sending email:", error);
+      console.error("Error sending notification:", error);
   }
 }
 
 /**
  * Sends a notification email to the user.
- * 
  * @param {string} email - The email address to send the notification to.
  * @param {Object} message - The message object containing type, status, and note.
  * @returns {Promise<void>}
@@ -609,11 +572,13 @@ async function sendNotification(email, message) {
   let subject = "Request Status Update";
   let body = `Your request for "${message.type}" has been ${message.status.toLowerCase()}.\nNote: ${message.note}`;
   try {
-    await emailService.sendEmail(email, subject, body);
+      await sendEmail(email, subject, body);
   } catch (error) {
-    console.error("Error sending notification:", error);
+      console.error("Error sending notification:", error);
   }
 }
+
+
 
 /**
  * Processes a request by updating its status to "Processed" and notifying the student.
@@ -693,5 +658,5 @@ module.exports = {
   fetchTokenDetails, updateUserPassword, removeToken, fetchStudentRequests,
   fetchStudentRequestsBySemester, cancelStudentRequest, addStudentRequest, calculateEstimatedCompletion,
   fetchQueueDetails, updateRequestStatus, sendNotification, processRequest, fetchNotifications,
-  deleteAllNotifications, fetchRequestsByType, fetchRandomRequest, fetchRequestById
+  deleteAllNotifications, fetchRequestsByType, fetchRandomRequest, fetchRequestById, sendEmail
 };

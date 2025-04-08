@@ -6,6 +6,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const business = require('./business.js');
 const flash = require('./flash.js');
+const crypto = require('crypto');
+
+
 
 // Initialize the Express app
 let app = express();
@@ -133,16 +136,17 @@ app.get('/forgetPassword', async (req, res) => {
 app.post('/forgetPassword', async (req, res) => {
   let resetEmail = req.body.resetEmail;
   let resetToken = await business.verifyEmailAndGenerateToken(resetEmail);
+  
   if (resetToken) {
-    console.log(`http:/127.0.0.1:8000/reset-password/?resetKey=${resetToken}`);
+    // send email
     let mailResult = await business.sendPasswordResetEmail(resetEmail, resetToken);
     if (mailResult == 0) {
-      console.log("Please start the email server");
+      console.log("Email sending failed - please check email server configuration");
     }
   }
+  
   res.redirect("/forgetPassword?resetMsg=Check your email account for the reset link");
 });
-
 // Route to render reset password page
 app.get('/reset-password', async (req, res) => {
   let resetKey = Number(req.query.resetKey);
@@ -189,7 +193,7 @@ app.get('/student', async (req, res) => {
   // Fetch notifications for the student
   let notifications = await business.fetchNotifications(username);
 
-  res.render('ProfileView', {
+  res.render('StudentHomePage', {
     layout: 'profile',
     username: username,
     email: email,
@@ -277,7 +281,7 @@ app.get("/admin/profile", async (req, res) => {
   let username = sessionData.data.username;
   let [email, phone] = await business.fetchUserContactDetails(username);
   let userId = await business.retrieveUserIdByUsername(username);
-  res.render('ProfileView', {
+  res.render('StudentHomePage', {
     layout: 'admin_layout',
     username: username,
     email: email,
@@ -287,7 +291,7 @@ app.get("/admin/profile", async (req, res) => {
 });
 
 // Route to render admin Student accounts page
-app.get("/admin/UserAccounts", async (req, res) => {
+app.get("/admin/StudentAccounts", async (req, res) => {
   let sessionId = req.cookies.projectkey;
   let sessionData = await business.fetchSessionData(sessionId);
   let username = sessionData.data.username;
@@ -306,7 +310,7 @@ app.get("/admin/UserAccounts", async (req, res) => {
 
   let studentUsers = await business.fetchAllStudentUsers();
   let managerUsers = await business.fetchAllManagerUsers();
-  res.render("UserAccounts", {
+  res.render("StudentAccounts", {
     link: "User Accounts",
     layout: "admin_layout",
     studentUsers: studentUsers,

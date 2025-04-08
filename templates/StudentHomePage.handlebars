@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile</title>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .profile-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-item {
+            border-left: 3px solid #4e73df;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .password-form {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Add loading state styling */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading:after {
+            content: " ";
+            display: inline-block;
+            width: 1.2em;
+            height: 1.2em;
+            border: 2px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 0.5rem;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card profile-card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="fas fa-user-circle me-2"></i>Student Profile</h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="info-badge">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h5><i class="fas fa-user-tag me-2"></i>Username</h5>
+                                    <p class="mb-0">{{username}}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h5><i class="fas fa-envelope me-2"></i>Email</h5>
+                                    <p class="mb-0">{{email}}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5><i class="fas fa-phone me-2"></i>Phone</h5>
+                                    <p class="mb-0">{{phone}}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="password-form">
+                            <h4 class="mb-4"><i class="fas fa-lock me-2"></i>Password Management</h4>
+                            <button class="btn btn-primary" id="resetPasswordBtn" onclick="sendResetEmail()">
+                                <i class="fas fa-envelope me-2"></i>Reset Password via Email
+                            </button>
+                            <div id="resetStatus" class="mt-2" style="display: none;"></div>
+                        </div>
+
+                        <div class="notifications-section">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4><i class="fas fa-bell me-2"></i>Notifications</h4>
+                                <button id="delete-notifications-btn" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>Clear All
+                                </button>
+                            </div>
+
+                            <div id="notifications-list">
+                                {{#each notifications}}
+                                <div class="notification-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-info-circle me-2 text-primary"></i>
+                                            {{this.message}}
+                                        </div>
+                                        <small class="text-muted">{{this.createdAt}}</small>
+                                    </div>
+                                </div>
+                                {{/each}}
+                                {{^notifications}}
+                                <div class="text-center text-muted py-4">
+                                    No new notifications
+                                </div>
+                                {{/notifications}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false; // Track ongoing request
+
+        async function sendResetEmail() {
+            if (isProcessing) return; // Prevent multiple requests
+            isProcessing = true;
+
+            const btn = document.getElementById('resetPasswordBtn');
+            const statusDiv = document.getElementById('resetStatus');
+
+            try {
+                btn.disabled = true;
+                btn.classList.add('btn-loading');
+                statusDiv.style.display = 'none';
+
+                const response = await fetch('/forgetPassword', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `resetEmail=${encodeURIComponent("{{email}}")}`
+                });
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Password reset link sent! Check your email inbox.
+                    </div>
+                `;
+                } else {
+                    statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error sending reset email. Please try again later.
+                    </div>
+                `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Network error. Please check your internet connection.
+                </div>
+            `;
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                isProcessing = false; // Reset flag
+            }
+        }
+
+        document.getElementById('delete-notifications-btn').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete all notifications?')) return;
+
+            const btn = document.getElementById('delete-notifications-btn');
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Clearing...`;
+
+                const response = await fetch('/api/notifications', { method: 'DELETE' });
+
+                if (response.ok) {
+                    document.getElementById('notifications-list').innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        No new notifications
+                    </div>
+                `;
+                } else {
+                    alert('Failed to clear notifications');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-trash me-2"></i>Clear All`;
+            }
+        });
+    </script>
+</body>
+
+</html>
