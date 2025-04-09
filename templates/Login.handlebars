@@ -38,36 +38,36 @@
   <link rel="stylesheet" href="/static/css/vendors/simplebar.css">
   <!-- Main styles for this application-->
   <link href="/static/css/style.css" rel="stylesheet">
-  <!-- We use those styles to show code examples, you should remove them in your application.-->
-  <link href="/static/css/examples.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
-<div id="message-container" style="display: none; padding: 10px; border-radius: 5px; margin-bottom: 10px;"></div>
+  <div id="message-container" style="display: none; padding: 10px; border-radius: 5px; margin-bottom: 10px;"></div>
 
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const message = urlParams.get('message');
-  const messageContainer = document.getElementById('message-container');
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get('message');
+    const messageContainer = document.getElementById('message-container');
 
-  if (message) {
-    messageContainer.innerText = message;
-    messageContainer.style.display = 'block';
+    if (message) {
+      messageContainer.innerText = message;
+      messageContainer.style.display = 'block';
 
-    // Set color based on message type
-    if (message.includes('verified')) {
-      messageContainer.style.backgroundColor = '#d4edda'; 
-      messageContainer.style.color = '#155724'; 
-      messageContainer.style.border = '1px solid #c3e6cb';
-    } else {
-      messageContainer.style.backgroundColor = '#f8d7da'; 
-      messageContainer.style.color = '#721c24'; 
-      messageContainer.style.border = '1px solid #f5c6cb';
+      // Set color based on message type
+      if (message.includes('verified')) {
+        messageContainer.style.backgroundColor = '#d4edda';
+        messageContainer.style.color = '#155724';
+        messageContainer.style.border = '1px solid #c3e6cb';
+      } else {
+        messageContainer.style.backgroundColor = '#f8d7da';
+        messageContainer.style.color = '#721c24';
+        messageContainer.style.border = '1px solid #f5c6cb';
+      }
     }
-  }
-</script>
+  </script>
 
-<!-- Main content -->
+  <!-- Main content -->
   <div class="bg-light min-vh-100 d-flex flex-row align-items-center">
     <div class="container">
       <div class="row justify-content-center">
@@ -95,8 +95,8 @@
                       <button class="btn btn-primary px-4" type="submit">Login</button>
                     </div>
                     <div class="col-6 text-end">
-                      <a href="/forgetPassword"><button class="btn btn-link px-0" type="button">Forgot
-                          password?</button></a>
+                      <a href="/forgetPassword" onclick="return false;"><button class="btn btn-link px-0"
+                          type="button">Forgot password?</button></a>
                     </div>
                   </div>
                 </form>
@@ -114,7 +114,7 @@
                 <div>
                   <h2>Sign up</h2>
                   <br>
-                  <h6>Course Management  System</h6>
+                  <h6>Course Management System</h6>
                   <p>
                     Easily submit and track your requests for section changes, course registration, and more. Streamline
                     approvals and get faster responses from the department.</p>
@@ -133,6 +133,68 @@
   <script src="/static/vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
   <script src="/static/vendors/simplebar/js/simplebar.min.js"></script>
   <script>
+  </script>
+  <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Forgot Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="forgotPasswordForm">
+            <div class="mb-3">
+              <label for="resetEmail" class="form-label">Enter your email address</label>
+              <input type="email" class="form-control" id="resetEmail" name="resetEmail" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="submitForgotPassword">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Handle the forgot password link click
+    document.querySelector('a[href="/forgetPassword"]').addEventListener('click', function (e) {
+      e.preventDefault();
+      var modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+      modal.show();
+    });
+
+    // Handle the submit button click
+    document.getElementById('submitForgotPassword').addEventListener('click', function () {
+      const email = document.getElementById('resetEmail').value;
+
+      if (!email) {
+        alert('Please enter your email address');
+        return;
+      }
+
+      fetch('/forgetPassword', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resetEmail: email })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('If an account with this email exists, a reset link has been sent');
+            var modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+            modal.hide();
+          } else {
+            alert('Error sending reset link. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error sending reset link. Please try again.');
+        });
+    });
   </script>
 </body>
 

@@ -150,11 +150,16 @@ app.post('/forgetPassword', async (req, res) => {
     let mailResult = await business.sendPasswordResetEmail(resetEmail, resetToken);
     if (mailResult == 0) {
       console.log("Email sending failed - please check email server configuration");
+      return res.json({ success: false });
     }
+    return res.json({ success: true });
   }
   
-  res.redirect("/forgetPassword?resetMsg=Check your email account for the reset link");
+  // Always return success to prevent email enumeration
+  return res.json({ success: true });
 });
+
+
 // Route to render reset password page
 app.get('/reset-password', async (req, res) => {
   let resetKey = Number(req.query.resetKey);
